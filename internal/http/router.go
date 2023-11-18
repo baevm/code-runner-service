@@ -8,9 +8,9 @@ import (
 )
 
 func (s *Server) LoadRoutes(e *echo.Echo) {
-	coderunnerSvc := coderunnerSvc.New()
+	crSvc := coderunnerSvc.New()
 
-	ch := coderunner.New(s.logger, coderunnerSvc)
+	ch := coderunner.New(s.logger, crSvc)
 
 	e.POST("/run_code", ch.RunCodeHandler)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	logger, err := logger.New()
+	log, err := logger.New()
 	if err != nil {
 		panic(err)
 	}
@@ -15,10 +15,8 @@ func main() {
 	err = config.Load()
 
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 	}
-
-	logger.Info(config.Get().Containers.MaxTime)
 
 	// err := containers.PullImages()
 
@@ -26,6 +24,6 @@ func main() {
 	// 	log.Fatalln(err)
 	// }
 
-	srv := http.New(logger)
+	srv := http.New(log)
 	srv.Run(config.Get().Server.Host, config.Get().Server.Port)
 }

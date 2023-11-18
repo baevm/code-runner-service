@@ -29,7 +29,8 @@ func (s *Server) Run(host string, port string) {
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			s.logger.Infow("request",
 				"URI", v.URI,
-				"status", v.Status)
+				"status", v.Status,
+			)
 
 			return nil
 		},

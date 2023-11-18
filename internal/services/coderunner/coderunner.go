@@ -1,13 +1,28 @@
 package coderunner
 
-import "code-runner-service/internal/containers"
+import (
+	"code-runner-service/internal/containers"
+	"code-runner-service/internal/models"
+	"context"
+)
 
-type Service struct{}
-
-func New() *Service {
-	return &Service{}
+type Service struct {
+	dockerCli *containers.Client
 }
 
-func (s *Service) RunCode(lang string, code string) (string, error) {
-	return containers.RunCodeContainer(lang, code)
+func New() *Service {
+	client, _ := containers.New()
+
+	return &Service{
+		dockerCli: client,
+	}
+}
+
+func (s *Service) RunCode(ctx context.Context, lang string, code string) (string, error) {
+	codeReq := models.Code{
+		Lang: lang,
+		Body: code,
+	}
+
+	return s.dockerCli.RunCodeContainer(ctx, codeReq)
 }
