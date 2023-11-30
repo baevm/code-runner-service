@@ -1,6 +1,7 @@
 package http
 
 import (
+	"code-runner-service/internal/mqueue"
 	"fmt"
 
 	"github.com/labstack/echo/v4"
@@ -10,11 +11,13 @@ import (
 
 type Server struct {
 	logger *zap.SugaredLogger
+	mq     *mqueue.MQueue
 }
 
-func New(logger *zap.SugaredLogger) *Server {
+func New(logger *zap.SugaredLogger, mq *mqueue.MQueue) *Server {
 	return &Server{
 		logger: logger,
+		mq:     mq,
 	}
 }
 

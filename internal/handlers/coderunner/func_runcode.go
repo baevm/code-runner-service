@@ -17,6 +17,10 @@ type CodeRunResponse struct {
 	Result string `json:"result"`
 }
 
+type CodeRunError struct {
+	Error string `json:"error"`
+}
+
 func (h *Handler) RunCodeHandler(c echo.Context) error {
 	req := new(CodeRunRequest)
 
@@ -30,7 +34,7 @@ func (h *Handler) RunCodeHandler(c echo.Context) error {
 	res, err := h.coderunnerSvc.RunCode(ctx, req.Language, req.Code)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, CodeRunError{Error: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, CodeRunResponse{Result: res})

@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/labstack/echo/v4 v4.11.2
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/spf13/viper v1.17.0
 	go.uber.org/zap v1.21.0
 )

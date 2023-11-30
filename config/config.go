@@ -13,9 +13,17 @@ type Config struct {
 	} `mapstructure:"server"`
 
 	Containers struct {
-		MaxCount int8          `mapstructure:"max_count"`
+		MaxCount int           `mapstructure:"max_count"`
 		MaxTime  time.Duration `mapstructure:"max_time"`
 	} `mapstructure:"containers"`
+
+	RabbitMQ struct {
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		Host     string `mapstructure:"host"`
+		VHost    string `mapstructure:"vhost"`
+		Port     string `mapstructure:"port"`
+	} `mapstructure:"rabbitmq"`
 }
 
 var config = new(Config)

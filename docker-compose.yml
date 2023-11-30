@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    hostname: localhost
+    image: rabbitmq:3.11-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=123456
+    volumes:
+      - '/data/docker/public/rabbitmq/:/var/lib/rabbitmq/'
+      # cfg
+      # - './rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json:ro'

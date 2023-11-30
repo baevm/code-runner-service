@@ -3,7 +3,6 @@ package containers
 import (
 	"code-runner-service/internal/models"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -20,7 +19,7 @@ const (
 	PY_IMAGE_KEY = "python"
 )
 
-var images = map[string]string{
+var Images = map[string]string{
 	JS_IMAGE_KEY: "node:20-alpine",
 	PY_IMAGE_KEY: "python:3.11-slim-bookworm",
 }
@@ -54,7 +53,7 @@ func PullImages() error {
 		return err
 	}
 
-	for _, refStr := range images {
+	for _, refStr := range Images {
 		_, err := cli.ImagePull(ctx, refStr, types.ImagePullOptions{})
 
 		if err != nil {
@@ -83,12 +82,6 @@ func createFile(code models.Code) (*os.File, error) {
 }
 
 func (c *Client) RunCodeContainer(ctx context.Context, code models.Code) (string, error) {
-	if _, isExist := images[code.Lang]; !isExist {
-		return "", errors.New("language not found")
-	}
-
-	//ctx := context.Background()
-
 	file, err := createFile(code)
 
 	if err != nil {
@@ -110,7 +103,7 @@ func (c *Client) RunCodeContainer(ctx context.Context, code models.Code) (string
 	fileName := fileFields[len(fileFields)-1]
 
 	cont, err := c.cli.ContainerCreate(ctx, &container.Config{
-		Image:        images[code.Lang],
+		Image:        Images[code.Lang],
 		Tty:          true,
 		AttachStdout: true,
 		Cmd:          []string{"bash", "-c", fmt.Sprintf("python3 %s", fileName)},
