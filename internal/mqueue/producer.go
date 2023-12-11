@@ -22,9 +22,10 @@ func NewProducer(conn *amqp091.Connection) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, body []byte) error {
+func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, body []byte, messageId string) error {
 	return p.Ch.PublishWithContext(ctx, exchange, routingKey, false, false, amqp091.Publishing{
 		ContentType: "text/plain",
 		Body:        body,
+		MessageId:   messageId,
 	})
 }

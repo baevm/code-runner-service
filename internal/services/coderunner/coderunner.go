@@ -5,10 +5,11 @@ import (
 	"code-runner-service/internal/containers"
 	"code-runner-service/internal/models"
 	"code-runner-service/internal/mqueue"
+	"code-runner-service/pkg/random"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -19,14 +20,21 @@ const (
 	ROUTING_KEY   = "run-code-request"
 )
 
-func (s *Service) RunCode(ctx context.Context, lang string, code string) (string, error) {
+func (s *Service) AddCodeToQueue(ctx context.Context, lang string, code string) (string, error) {
 	if _, isExist := containers.Images[lang]; !isExist {
 		return "", errors.New("language not found")
 	}
 
+	requestId, err := random.String(12)
+
+	if err != nil {
+		return "", err
+	}
+
 	codeReq := models.Code{
-		Lang: lang,
-		Body: code,
+		Lang:      lang,
+		Body:      code,
+		RequestId: requestId,
 	}
 
 	codeData, err := codeReq.ToJSON()
@@ -35,23 +43,29 @@ func (s *Service) RunCode(ctx context.Context, lang string, code string) (string
 		return "", err
 	}
 
-	err = s.producer.Publish(ctx, EXCHANGE_NAME, ROUTING_KEY, codeData)
+	// add code task to queue
+	err = s.producer.Publish(ctx,
+		EXCHANGE_NAME,
+		ROUTING_KEY,
+		codeData,
+		codeReq.RequestId,
+	)
 
 	if err != nil {
 		return "", err
 	}
 
-	return "started container", nil
+	return codeReq.RequestId, nil
 }
 
-func startCodeRunnerConsumer(log *zap.SugaredLogger) {
+func startCodeRunnerConsumer(log *zap.SugaredLogger, dockerCli *containers.Client) {
 	mq, err := mqueue.Connect(config.Get().RabbitMQ.Username,
 		config.Get().RabbitMQ.Password,
 		fmt.Sprintf("%s:%s", config.Get().RabbitMQ.Host, config.Get().RabbitMQ.Port),
 		config.Get().RabbitMQ.VHost)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalw("failed to connect to rabbitmq", "error", err)
 	}
 
 	defer mq.Conn.Close()
@@ -79,10 +93,32 @@ func startCodeRunnerConsumer(log *zap.SugaredLogger) {
 	for msg := range msgs {
 		msg := msg
 
+		// start new goroutine for each message
+		// to process multiple messages at the same time
 		go func() {
-			time.Sleep(5 * time.Second)
-			log.Infow("message received", "body", string(msg.Body))
-			msg.Ack(false)
+			defer msg.Ack(false)
+			log.Infow("message received", "id", msg.MessageId)
+
+			var code models.Code
+
+			err := json.Unmarshal(msg.Body, &code)
+
+			if err != nil {
+				log.Errorw("failed to parse message", "error", err)
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), config.Get().Containers.MaxTime)
+			defer cancel()
+
+			res, err := dockerCli.RunCodeContainer(ctx, code)
+
+			if err != nil {
+				log.Errorw("failed to run code container", "error", err)
+				return
+			}
+
+			log.Infow("code container finished", "result", res)
 		}()
 	}
 

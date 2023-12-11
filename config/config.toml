@@ -1,5 +1,5 @@
 [containers]
-max_count = 10
+max_count = 5
 max_time = "10s"
 
 [server]

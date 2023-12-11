@@ -18,7 +18,7 @@ func New(mq *mqueue.MQueue, log *zap.SugaredLogger) *Service {
 
 	producer, _ := mqueue.NewProducer(mq.Conn)
 
-	go startCodeRunnerConsumer(log)
+	go startCodeRunnerConsumer(log, client)
 
 	return &Service{
 		log:       log,

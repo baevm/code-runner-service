@@ -14,7 +14,7 @@ type CodeRunRequest struct {
 }
 
 type CodeRunResponse struct {
-	Result string `json:"result"`
+	RequestId string `json:"request_id"`
 }
 
 type CodeRunError struct {
@@ -31,11 +31,11 @@ func (h *Handler) RunCodeHandler(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, err := h.coderunnerSvc.RunCode(ctx, req.Language, req.Code)
+	requestId, err := h.coderunnerSvc.AddCodeToQueue(ctx, req.Language, req.Code)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, CodeRunError{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, CodeRunResponse{Result: res})
+	return c.JSON(http.StatusOK, CodeRunResponse{RequestId: requestId})
 }
